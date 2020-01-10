@@ -1610,7 +1610,7 @@ class Parser(BaseParser):
 		self.show_toc = show_toc
 
 	def parse(self, text):
-		utf8 = isinstance(text, str)
+		utf8 = isinstance(text, six.binary_type)
 		text = to_unicode(text)
 		if text[-1:] != '\n':
 			text = text + '\n'
@@ -1859,7 +1859,7 @@ class Parser(BaseParser):
 				prevlevel = level
 				prevtoclevel = toclevel
 
-			level = matches[headlineCount][0]
+			level = int(matches[headlineCount][0])
 
 			if doNumberHeadings or enoughToc:
 				if level > prevlevel:
@@ -2072,12 +2072,12 @@ def to_unicode(text, charset=None):
 				return ' '.join([to_unicode(arg) for arg in text.args])
 		return six.text_type(text)
 	if charset:
-		return six.text_type(text, charset, 'replace')
+		return six.ensure_text(text, charset, 'replace')
 	else:
 		try:
-			return six.text_type(text, 'utf-8')
+			return six.ensure_text(text, 'utf-8')
 		except UnicodeError:
-			return six.text_type(text, locale.getpreferredencoding(), 'replace')
+			return six.ensure_text(text, locale.getpreferredencoding(), 'replace')
 
 # tag hooks
 mTagHooks = {}
@@ -2120,10 +2120,6 @@ def str2url(str):
 	Takes a UTF-8 string and replaces all characters with the equivalent in 7-bit
 	ASCII. It returns a plain ASCII string usable in URLs.
 	"""
-	try:
-		str = str.encode('utf-8')
-	except:
-		pass
 	mfrom	= "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîï"
 	to		= "AAAAAAECEEEEIIIIDNOOOOOOUUUUYSaaaaaaaceeeeiiii"
 	mfrom	+= "ñòóôõöøùúûüýÿĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģ"

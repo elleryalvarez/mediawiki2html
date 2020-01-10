@@ -21,12 +21,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 from __future__ import unicode_literals
 from __future__ import absolute_import
 import re
-import random
-import locale
-
-from base64 import b64encode
-from base64 import b64decode
-from StringIO import StringIO
 
 from . import wikimarkup
 

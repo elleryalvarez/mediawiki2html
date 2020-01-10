@@ -19,7 +19,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import unicode_literals
-from wiki import *
+from __future__ import absolute_import
+from .wiki import *
 
 __author__ = "Raimon Esteve <resteve@zikzakmedia.com"
 __license__ = "GPLv3+"

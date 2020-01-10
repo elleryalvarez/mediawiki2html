@@ -18,10 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from __future__ import unicode_literals
+from __future__ import absolute_import
 from collections import OrderedDict
 import re, random, locale
 from base64 import b64encode, b64decode
 import six
+from six.moves import range
+from six.moves import zip
 
 # a few patterns we use later
 
@@ -496,7 +499,7 @@ class BaseParser(object):
 
 		commentState = {}
 
-		elements = ['nowiki',]  + mTagHooks.keys()
+		elements = ['nowiki',]  + list(mTagHooks.keys())
 		if True: #wgRawHtml
 			elements.append('html')
 
@@ -884,7 +887,7 @@ class BaseParser(object):
 		# of bold and italics mark-ups.
 		numBold = 0
 		numItalics = 0
-		for i,r in zip(range(len(arr)), arr):
+		for i,r in zip(list(range(len(arr))), arr):
 			if i%2 == 1:
 				l = len(r)
 				if l == 4:
@@ -909,7 +912,7 @@ class BaseParser(object):
 			firstSingleLetterWord = -1
 			firstMultiLetterWord = -1
 			firstSpace = -1
-			for i,r in zip(range(len(arr)), arr):
+			for i,r in zip(list(range(len(arr))), arr):
 				if i%2 == 1 and len(r) == 3:
 					x1 = arr[i-1][-1:]
 					x2 = arr[i-1][-2:-1]
@@ -942,7 +945,7 @@ class BaseParser(object):
 		output = []
 		buffer = None
 		state = ''
-		for i,r in zip(range(len(arr)), arr):
+		for i,r in zip(list(range(len(arr))), arr):
 			if i%2 == 0:
 				if state == 'both':
 					buffer.append(r)
@@ -1656,7 +1659,7 @@ class Parser(BaseParser):
 		has_opened_tr = [] # Did this table open a <tr> element?
 		indent_level = 0 # indent level of the table
 
-		for k, x in zip(range(len(t)), t):
+		for k, x in zip(list(range(len(t))), t):
 			x = x.strip()
 			fc = x[0:1]
 			matches = _zomgPat.match(x)

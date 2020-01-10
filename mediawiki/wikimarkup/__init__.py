@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
+from collections import OrderedDict
 import re, random, locale
 from base64 import b64encode, b64decode
 
@@ -689,7 +689,7 @@ class BaseParser(object):
 
 	def decodeTagAttributes(self, text):
 		"""docstring for decodeTagAttributes"""
-		attribs = {}
+		attribs = OrderedDict()
 		if text.strip() == u'':
 			return attribs
 		scanner = _attributePat.scanner(text)
@@ -708,7 +708,7 @@ class BaseParser(object):
 
 	def validateTagAttributes(self, attribs, element):
 		"""docstring for validateTagAttributes"""
-		out = {}
+		out = OrderedDict()
 		if element not in _whitelist:
 			return out
 		whitelist = _whitelist[element]

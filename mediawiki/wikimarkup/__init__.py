@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+from __future__ import unicode_literals
 from collections import OrderedDict
 import re, random, locale
 from base64 import b64encode, b64decode
@@ -33,394 +34,394 @@ MW_COLON_STATE_COMMENT = 5
 MW_COLON_STATE_COMMENTDASH = 6
 MW_COLON_STATE_COMMENTDASHDASH = 7
 
-_attributePat = re.compile(ur'''(?:^|\s)([A-Za-z0-9]+)(?:\s*=\s*(?:"([^<"]*)"|'([^<']*)'|([a-zA-Z0-9!#$%&()*,\-./:;<>?@[\]^_`{|}~]+)|#([0-9a-fA-F]+)))''', re.UNICODE)
-_space = re.compile(ur'\s+', re.UNICODE)
-_closePrePat = re.compile(u"</pre", re.UNICODE | re.IGNORECASE)
-_openPrePat = re.compile(u"<pre", re.UNICODE | re.IGNORECASE)
-_openMatchPat = re.compile(u"(<table|<blockquote|<h1|<h2|<h3|<h4|<h5|<h6|<pre|<tr|<p|<ul|<ol|<li|</center|</tr|</td|</th)", re.UNICODE | re.IGNORECASE)
-_tagPattern = re.compile(ur'^(/?)(\w+)([^>]*?)(/?>)([^<]*)$', re.UNICODE)
+_attributePat = re.compile(r'''(?:^|\s)([A-Za-z0-9]+)(?:\s*=\s*(?:"([^<"]*)"|'([^<']*)'|([a-zA-Z0-9!#$%&()*,\-./:;<>?@[\]^_`{|}~]+)|#([0-9a-fA-F]+)))''', re.UNICODE)
+_space = re.compile(r'\s+', re.UNICODE)
+_closePrePat = re.compile("</pre", re.UNICODE | re.IGNORECASE)
+_openPrePat = re.compile("<pre", re.UNICODE | re.IGNORECASE)
+_openMatchPat = re.compile("(<table|<blockquote|<h1|<h2|<h3|<h4|<h5|<h6|<pre|<tr|<p|<ul|<ol|<li|</center|</tr|</td|</th)", re.UNICODE | re.IGNORECASE)
+_tagPattern = re.compile(r'^(/?)(\w+)([^>]*?)(/?>)([^<]*)$', re.UNICODE)
 
 _htmlpairs = ( # Tags that must be closed
-	u'b', u'del', u'i', u'ins', u'u', u'font', u'big', u'small', u'sub', u'sup', u'h1',
-	u'h2', u'h3', u'h4', u'h5', u'h6', u'cite', u'code', u'em', u's',
-	u'strike', u'strong', u'tt', u'var', u'div', u'center',
-	u'blockquote', u'ol', u'ul', u'dl', u'table', u'caption', u'pre',
-	u'ruby', u'rt' , u'rb' , u'rp', u'p', u'span', u'u',
+	'b', 'del', 'i', 'ins', 'u', 'font', 'big', 'small', 'sub', 'sup', 'h1',
+	'h2', 'h3', 'h4', 'h5', 'h6', 'cite', 'code', 'em', 's',
+	'strike', 'strong', 'tt', 'var', 'div', 'center',
+	'blockquote', 'ol', 'ul', 'dl', 'table', 'caption', 'pre',
+	'ruby', 'rt' , 'rb' , 'rp', 'p', 'span', 'u',
 )
 _htmlsingle = (
-	u'br', u'hr', u'li', u'dt', u'dd', u'img',
+	'br', 'hr', 'li', 'dt', 'dd', 'img',
 )
 _htmlsingleonly = ( # Elements that cannot have close tags
-	u'br', u'hr', u'img',
+	'br', 'hr', 'img',
 )
 _htmlnest = ( # Tags that can be nested--??
-	u'table', u'tr', u'td', u'th', u'div', u'blockquote', u'ol', u'ul',
-	u'dl', u'font', u'big', u'small', u'sub', u'sup', u'span', u'img',
+	'table', 'tr', 'td', 'th', 'div', 'blockquote', 'ol', 'ul',
+	'dl', 'font', 'big', 'small', 'sub', 'sup', 'span', 'img',
 )
 _tabletags = ( # Can only appear inside table
-	u'td', u'th', u'tr',
+	'td', 'th', 'tr',
 )
 _htmllist = ( # Tags used by list
-	u'ul', u'ol',
+	'ul', 'ol',
 )
 _listtags = ( # Tags that can appear in a list
-	u'li',
+	'li',
 )
 _htmlsingleallowed = _htmlsingle + _tabletags
 _htmlelements = _htmlsingle + _htmlpairs + _htmlnest
 
 _htmlEntities = {
-	u'Aacute': 193,	u'aacute': 225, u'Acirc': 194, u'acirc': 226, u'acute': 180,
-	u'AElig': 198, u'aelig': 230, u'Agrave': 192, u'agrave': 224, u'alefsym': 8501,
-	u'Alpha': 913, u'alpha': 945, u'amp': 38, u'and': 8743, u'ang': 8736, u'Aring': 197,
-	u'aring':	  229,
-	u'asymp':	  8776,
-	u'Atilde':	 195,
-	u'atilde':	 227,
-	u'Auml':	   196,
-	u'auml':	   228,
-	u'bdquo':	  8222,
-	u'Beta':	   914,
-	u'beta':	   946,
-	u'brvbar':	 166,
-	u'bull':	   8226,
-	u'cap':		8745,
-	u'Ccedil':	 199,
-	u'ccedil':	 231,
-	u'cedil':	  184,
-	u'cent':	   162,
-	u'Chi':		935,
-	u'chi':		967,
-	u'circ':	   710,
-	u'clubs':	  9827,
-	u'cong':	   8773,
-	u'copy':	   169,
-	u'crarr':	  8629,
-	u'cup':		8746,
-	u'curren':	 164,
-	u'dagger':	 8224,
-	u'Dagger':	 8225,
-	u'darr':	   8595,
-	u'dArr':	   8659,
-	u'deg':		176,
-	u'Delta':	  916,
-	u'delta':	  948,
-	u'diams':	  9830,
-	u'divide':	 247,
-	u'Eacute':	 201,
-	u'eacute':	 233,
-	u'Ecirc':	  202,
-	u'ecirc':	  234,
-	u'Egrave':	 200,
-	u'egrave':	 232,
-	u'empty':	  8709,
-	u'emsp':	   8195,
-	u'ensp':	   8194,
-	u'Epsilon':	917,
-	u'epsilon':	949,
-	u'equiv':	  8801,
-	u'Eta':		919,
-	u'eta':		951,
-	u'ETH':		208,
-	u'eth':		240,
-	u'Euml':	   203,
-	u'euml':	   235,
-	u'euro':	   8364,
-	u'exist':	  8707,
-	u'fnof':	   402,
-	u'forall':	 8704,
-	u'frac12':	 189,
-	u'frac14':	 188,
-	u'frac34':	 190,
-	u'frasl':	  8260,
-	u'Gamma':	  915,
-	u'gamma':	  947,
-	u'ge':		 8805,
-	u'gt':		 62,
-	u'harr':	   8596,
-	u'hArr':	   8660,
-	u'hearts':	 9829,
-	u'hellip':	 8230,
-	u'Iacute':	 205,
-	u'iacute':	 237,
-	u'Icirc':	  206,
-	u'icirc':	  238,
-	u'iexcl':	  161,
-	u'Igrave':	 204,
-	u'igrave':	 236,
-	u'image':	  8465,
-	u'infin':	  8734,
-	u'int':		8747,
-	u'Iota':	   921,
-	u'iota':	   953,
-	u'iquest':	 191,
-	u'isin':	   8712,
-	u'Iuml':	   207,
-	u'iuml':	   239,
-	u'Kappa':	  922,
-	u'kappa':	  954,
-	u'Lambda':	 923,
-	u'lambda':	 955,
-	u'lang':	   9001,
-	u'laquo':	  171,
-	u'larr':	   8592,
-	u'lArr':	   8656,
-	u'lceil':	  8968,
-	u'ldquo':	  8220,
-	u'le':		 8804,
-	u'lfloor':	 8970,
-	u'lowast':	 8727,
-	u'loz':		9674,
-	u'lrm':		8206,
-	u'lsaquo':	 8249,
-	u'lsquo':	  8216,
-	u'lt':		 60,
-	u'macr':	   175,
-	u'mdash':	  8212,
-	u'micro':	  181,
-	u'middot':	 183,
-	u'minus':	  8722,
-	u'Mu':		 924,
-	u'mu':		 956,
-	u'nabla':	  8711,
-	u'nbsp':	   160,
-	u'ndash':	  8211,
-	u'ne':		 8800,
-	u'ni':		 8715,
-	u'not':		172,
-	u'notin':	  8713,
-	u'nsub':	   8836,
-	u'Ntilde':	 209,
-	u'ntilde':	 241,
-	u'Nu':		 925,
-	u'nu':		 957,
-	u'Oacute':	 211,
-	u'oacute':	 243,
-	u'Ocirc':	  212,
-	u'ocirc':	  244,
-	u'OElig':	  338,
-	u'oelig':	  339,
-	u'Ograve':	 210,
-	u'ograve':	 242,
-	u'oline':	  8254,
-	u'Omega':	  937,
-	u'omega':	  969,
-	u'Omicron':	927,
-	u'omicron':	959,
-	u'oplus':	  8853,
-	u'or':		 8744,
-	u'ordf':	   170,
-	u'ordm':	   186,
-	u'Oslash':	 216,
-	u'oslash':	 248,
-	u'Otilde':	 213,
-	u'otilde':	 245,
-	u'otimes':	 8855,
-	u'Ouml':	   214,
-	u'ouml':	   246,
-	u'para':	   182,
-	u'part':	   8706,
-	u'permil':	 8240,
-	u'perp':	   8869,
-	u'Phi':		934,
-	u'phi':		966,
-	u'Pi':		 928,
-	u'pi':		 960,
-	u'piv':		982,
-	u'plusmn':	 177,
-	u'pound':	  163,
-	u'prime':	  8242,
-	u'Prime':	  8243,
-	u'prod':	   8719,
-	u'prop':	   8733,
-	u'Psi':		936,
-	u'psi':		968,
-	u'quot':	   34,
-	u'radic':	  8730,
-	u'rang':	   9002,
-	u'raquo':	  187,
-	u'rarr':	   8594,
-	u'rArr':	   8658,
-	u'rceil':	  8969,
-	u'rdquo':	  8221,
-	u'real':	   8476,
-	u'reg':		174,
-	u'rfloor':	 8971,
-	u'Rho':		929,
-	u'rho':		961,
-	u'rlm':		8207,
-	u'rsaquo':	 8250,
-	u'rsquo':	  8217,
-	u'sbquo':	  8218,
-	u'Scaron':	 352,
-	u'scaron':	 353,
-	u'sdot':	   8901,
-	u'sect':	   167,
-	u'shy':		173,
-	u'Sigma':	  931,
-	u'sigma':	  963,
-	u'sigmaf':	 962,
-	u'sim':		8764,
-	u'spades':	 9824,
-	u'sub':		8834,
-	u'sube':	   8838,
-	u'sum':		8721,
-	u'sup':		8835,
-	u'sup1':	   185,
-	u'sup2':	   178,
-	u'sup3':	   179,
-	u'supe':	   8839,
-	u'szlig':	  223,
-	u'Tau':		932,
-	u'tau':		964,
-	u'there4':	 8756,
-	u'Theta':	  920,
-	u'theta':	  952,
-	u'thetasym':   977,
-	u'thinsp':	 8201,
-	u'THORN':	  222,
-	u'thorn':	  254,
-	u'tilde':	  732,
-	u'times':	  215,
-	u'trade':	  8482,
-	u'Uacute':	 218,
-	u'uacute':	 250,
-	u'uarr':	   8593,
-	u'uArr':	   8657,
-	u'Ucirc':	  219,
-	u'ucirc':	  251,
-	u'Ugrave':	 217,
-	u'ugrave':	 249,
-	u'uml':		168,
-	u'upsih':	  978,
-	u'Upsilon':	933,
-	u'upsilon':	965,
-	u'Uuml':	   220,
-	u'uuml':	   252,
-	u'weierp':	 8472,
-	u'Xi':		 926,
-	u'xi':		 958,
-	u'Yacute':	 221,
-	u'yacute':	 253,
-	u'yen':		165,
-	u'Yuml':	   376,
-	u'yuml':	   255,
-	u'Zeta':	   918,
-	u'zeta':	   950,
-	u'zwj':		8205,
-	u'zwnj':	   8204
+	'Aacute': 193,	'aacute': 225, 'Acirc': 194, 'acirc': 226, 'acute': 180,
+	'AElig': 198, 'aelig': 230, 'Agrave': 192, 'agrave': 224, 'alefsym': 8501,
+	'Alpha': 913, 'alpha': 945, 'amp': 38, 'and': 8743, 'ang': 8736, 'Aring': 197,
+	'aring':	  229,
+	'asymp':	  8776,
+	'Atilde':	 195,
+	'atilde':	 227,
+	'Auml':	   196,
+	'auml':	   228,
+	'bdquo':	  8222,
+	'Beta':	   914,
+	'beta':	   946,
+	'brvbar':	 166,
+	'bull':	   8226,
+	'cap':		8745,
+	'Ccedil':	 199,
+	'ccedil':	 231,
+	'cedil':	  184,
+	'cent':	   162,
+	'Chi':		935,
+	'chi':		967,
+	'circ':	   710,
+	'clubs':	  9827,
+	'cong':	   8773,
+	'copy':	   169,
+	'crarr':	  8629,
+	'cup':		8746,
+	'curren':	 164,
+	'dagger':	 8224,
+	'Dagger':	 8225,
+	'darr':	   8595,
+	'dArr':	   8659,
+	'deg':		176,
+	'Delta':	  916,
+	'delta':	  948,
+	'diams':	  9830,
+	'divide':	 247,
+	'Eacute':	 201,
+	'eacute':	 233,
+	'Ecirc':	  202,
+	'ecirc':	  234,
+	'Egrave':	 200,
+	'egrave':	 232,
+	'empty':	  8709,
+	'emsp':	   8195,
+	'ensp':	   8194,
+	'Epsilon':	917,
+	'epsilon':	949,
+	'equiv':	  8801,
+	'Eta':		919,
+	'eta':		951,
+	'ETH':		208,
+	'eth':		240,
+	'Euml':	   203,
+	'euml':	   235,
+	'euro':	   8364,
+	'exist':	  8707,
+	'fnof':	   402,
+	'forall':	 8704,
+	'frac12':	 189,
+	'frac14':	 188,
+	'frac34':	 190,
+	'frasl':	  8260,
+	'Gamma':	  915,
+	'gamma':	  947,
+	'ge':		 8805,
+	'gt':		 62,
+	'harr':	   8596,
+	'hArr':	   8660,
+	'hearts':	 9829,
+	'hellip':	 8230,
+	'Iacute':	 205,
+	'iacute':	 237,
+	'Icirc':	  206,
+	'icirc':	  238,
+	'iexcl':	  161,
+	'Igrave':	 204,
+	'igrave':	 236,
+	'image':	  8465,
+	'infin':	  8734,
+	'int':		8747,
+	'Iota':	   921,
+	'iota':	   953,
+	'iquest':	 191,
+	'isin':	   8712,
+	'Iuml':	   207,
+	'iuml':	   239,
+	'Kappa':	  922,
+	'kappa':	  954,
+	'Lambda':	 923,
+	'lambda':	 955,
+	'lang':	   9001,
+	'laquo':	  171,
+	'larr':	   8592,
+	'lArr':	   8656,
+	'lceil':	  8968,
+	'ldquo':	  8220,
+	'le':		 8804,
+	'lfloor':	 8970,
+	'lowast':	 8727,
+	'loz':		9674,
+	'lrm':		8206,
+	'lsaquo':	 8249,
+	'lsquo':	  8216,
+	'lt':		 60,
+	'macr':	   175,
+	'mdash':	  8212,
+	'micro':	  181,
+	'middot':	 183,
+	'minus':	  8722,
+	'Mu':		 924,
+	'mu':		 956,
+	'nabla':	  8711,
+	'nbsp':	   160,
+	'ndash':	  8211,
+	'ne':		 8800,
+	'ni':		 8715,
+	'not':		172,
+	'notin':	  8713,
+	'nsub':	   8836,
+	'Ntilde':	 209,
+	'ntilde':	 241,
+	'Nu':		 925,
+	'nu':		 957,
+	'Oacute':	 211,
+	'oacute':	 243,
+	'Ocirc':	  212,
+	'ocirc':	  244,
+	'OElig':	  338,
+	'oelig':	  339,
+	'Ograve':	 210,
+	'ograve':	 242,
+	'oline':	  8254,
+	'Omega':	  937,
+	'omega':	  969,
+	'Omicron':	927,
+	'omicron':	959,
+	'oplus':	  8853,
+	'or':		 8744,
+	'ordf':	   170,
+	'ordm':	   186,
+	'Oslash':	 216,
+	'oslash':	 248,
+	'Otilde':	 213,
+	'otilde':	 245,
+	'otimes':	 8855,
+	'Ouml':	   214,
+	'ouml':	   246,
+	'para':	   182,
+	'part':	   8706,
+	'permil':	 8240,
+	'perp':	   8869,
+	'Phi':		934,
+	'phi':		966,
+	'Pi':		 928,
+	'pi':		 960,
+	'piv':		982,
+	'plusmn':	 177,
+	'pound':	  163,
+	'prime':	  8242,
+	'Prime':	  8243,
+	'prod':	   8719,
+	'prop':	   8733,
+	'Psi':		936,
+	'psi':		968,
+	'quot':	   34,
+	'radic':	  8730,
+	'rang':	   9002,
+	'raquo':	  187,
+	'rarr':	   8594,
+	'rArr':	   8658,
+	'rceil':	  8969,
+	'rdquo':	  8221,
+	'real':	   8476,
+	'reg':		174,
+	'rfloor':	 8971,
+	'Rho':		929,
+	'rho':		961,
+	'rlm':		8207,
+	'rsaquo':	 8250,
+	'rsquo':	  8217,
+	'sbquo':	  8218,
+	'Scaron':	 352,
+	'scaron':	 353,
+	'sdot':	   8901,
+	'sect':	   167,
+	'shy':		173,
+	'Sigma':	  931,
+	'sigma':	  963,
+	'sigmaf':	 962,
+	'sim':		8764,
+	'spades':	 9824,
+	'sub':		8834,
+	'sube':	   8838,
+	'sum':		8721,
+	'sup':		8835,
+	'sup1':	   185,
+	'sup2':	   178,
+	'sup3':	   179,
+	'supe':	   8839,
+	'szlig':	  223,
+	'Tau':		932,
+	'tau':		964,
+	'there4':	 8756,
+	'Theta':	  920,
+	'theta':	  952,
+	'thetasym':   977,
+	'thinsp':	 8201,
+	'THORN':	  222,
+	'thorn':	  254,
+	'tilde':	  732,
+	'times':	  215,
+	'trade':	  8482,
+	'Uacute':	 218,
+	'uacute':	 250,
+	'uarr':	   8593,
+	'uArr':	   8657,
+	'Ucirc':	  219,
+	'ucirc':	  251,
+	'Ugrave':	 217,
+	'ugrave':	 249,
+	'uml':		168,
+	'upsih':	  978,
+	'Upsilon':	933,
+	'upsilon':	965,
+	'Uuml':	   220,
+	'uuml':	   252,
+	'weierp':	 8472,
+	'Xi':		 926,
+	'xi':		 958,
+	'Yacute':	 221,
+	'yacute':	 253,
+	'yen':		165,
+	'Yuml':	   376,
+	'yuml':	   255,
+	'Zeta':	   918,
+	'zeta':	   950,
+	'zwj':		8205,
+	'zwnj':	   8204
 }
 
-_charRefsPat = re.compile(ur'''(&([A-Za-z0-9]+);|&#([0-9]+);|&#[xX]([0-9A-Za-z]+);|(&))''', re.UNICODE)
-_cssCommentPat = re.compile(ur'''\*.*?\*''', re.UNICODE)
-_toUTFPat = re.compile(ur'''\\([0-9A-Fa-f]{1,6})[\s]?''', re.UNICODE)
-_hackPat = re.compile(ur'''(expression|tps*://|url\s*\().*''', re.UNICODE | re.IGNORECASE)
-_hrPat = re.compile(u'''^-----*''', re.UNICODE | re.MULTILINE)
-_h1Pat = re.compile(u'^=(.+)=\s*$', re.UNICODE | re.MULTILINE)
-_h2Pat = re.compile(u'^==(.+)==\s*$', re.UNICODE | re.MULTILINE)
-_h3Pat = re.compile(u'^===(.+)===\s*$', re.UNICODE | re.MULTILINE)
-_h4Pat = re.compile(u'^====(.+)====\s*$', re.UNICODE | re.MULTILINE)
-_h5Pat = re.compile(u'^=====(.+)=====\s*$', re.UNICODE | re.MULTILINE)
-_h6Pat = re.compile(u'^======(.+)======\s*$', re.UNICODE | re.MULTILINE)
-_quotePat = re.compile(u"""(''+)""", re.UNICODE)
-_removePat = re.compile(ur'\b(' + ur'|'.join((u"a", u"an", u"as", u"at", u"before", u"but", u"by", u"for", u"from",
-							u"is", u"in", u"into", u"like", u"of", u"off", u"on", u"onto", u"per",
-							u"since", u"than", u"the", u"this", u"that", u"to", u"up", u"via",
-							u"with")) + ur')\b', re.UNICODE | re.IGNORECASE)
-_nonWordSpaceDashPat = re.compile(ur'[^\w\s\-\./]', re.UNICODE)
-_multiSpacePat = re.compile(ur'[\s\-_\./]+', re.UNICODE)
-_spacePat = re.compile(ur' ', re.UNICODE)
-_linkPat = re.compile(ur'^(?:([A-Za-z0-9]+):)?([^\|]+)(?:\|([^\n]+?))?\]\](.*)$', re.UNICODE | re.DOTALL)
-_bracketedLinkPat = re.compile(ur'(?:\[((?:mailto:|irc://|https?://|ftp://|/)[^<>\]\[' + u"\x00-\x20\x7f" + ur']*)\s*(.*?)\])', re.UNICODE)
-_protocolPat = re.compile(ur'(\b(?:mailto:|irc://|https?://|ftp://))', re.UNICODE)
-_specialUrlPat = re.compile(ur'^([^<>\]\[' + u"\x00-\x20\x7f" + ur']+)(.*)$', re.UNICODE)
-_protocolsPat = re.compile(ur'^(mailto:|irc://|https?://|ftp://)$', re.UNICODE)
-_controlCharsPat = re.compile(ur'[\]\[<>"' + u"\\x00-\\x20\\x7F" + ur']]', re.UNICODE)
-_hostnamePat = re.compile(ur'^([^:]+:)(//[^/]+)?(.*)$', re.UNICODE)
-_stripPat = re.compile(u'\\s|\u00ad|\u1806|\u200b|\u2060|\ufeff|\u03f4|\u034f|\u180b|\u180c|\u180d|\u200c|\u200d|[\ufe00-\ufe0f]', re.UNICODE)
-_zomgPat = re.compile(ur'^(:*)\{\|(.*)$', re.UNICODE)
-_headerPat = re.compile(ur"<[Hh]([1-6])(.*?)>(.*?)</[Hh][1-6] *>", re.UNICODE)
-_templateSectionPat = re.compile(ur"<!--MWTEMPLATESECTION=([^&]+)&([^_]+)-->", re.UNICODE)
-_tagPat = re.compile(ur"<.*?>", re.UNICODE)
+_charRefsPat = re.compile(r'''(&([A-Za-z0-9]+);|&#([0-9]+);|&#[xX]([0-9A-Za-z]+);|(&))''', re.UNICODE)
+_cssCommentPat = re.compile(r'''\*.*?\*''', re.UNICODE)
+_toUTFPat = re.compile(r'''\\([0-9A-Fa-f]{1,6})[\s]?''', re.UNICODE)
+_hackPat = re.compile(r'''(expression|tps*://|url\s*\().*''', re.UNICODE | re.IGNORECASE)
+_hrPat = re.compile('''^-----*''', re.UNICODE | re.MULTILINE)
+_h1Pat = re.compile('^=(.+)=\s*$', re.UNICODE | re.MULTILINE)
+_h2Pat = re.compile('^==(.+)==\s*$', re.UNICODE | re.MULTILINE)
+_h3Pat = re.compile('^===(.+)===\s*$', re.UNICODE | re.MULTILINE)
+_h4Pat = re.compile('^====(.+)====\s*$', re.UNICODE | re.MULTILINE)
+_h5Pat = re.compile('^=====(.+)=====\s*$', re.UNICODE | re.MULTILINE)
+_h6Pat = re.compile('^======(.+)======\s*$', re.UNICODE | re.MULTILINE)
+_quotePat = re.compile("""(''+)""", re.UNICODE)
+_removePat = re.compile(r'\b(' + r'|'.join(("a", "an", "as", "at", "before", "but", "by", "for", "from",
+							"is", "in", "into", "like", "of", "off", "on", "onto", "per",
+							"since", "than", "the", "this", "that", "to", "up", "via",
+							"with")) + r')\b', re.UNICODE | re.IGNORECASE)
+_nonWordSpaceDashPat = re.compile(r'[^\w\s\-\./]', re.UNICODE)
+_multiSpacePat = re.compile(r'[\s\-_\./]+', re.UNICODE)
+_spacePat = re.compile(r' ', re.UNICODE)
+_linkPat = re.compile(r'^(?:([A-Za-z0-9]+):)?([^\|]+)(?:\|([^\n]+?))?\]\](.*)$', re.UNICODE | re.DOTALL)
+_bracketedLinkPat = re.compile(r'(?:\[((?:mailto:|irc://|https?://|ftp://|/)[^<>\]\[' + "\x00-\x20\x7f" + r']*)\s*(.*?)\])', re.UNICODE)
+_protocolPat = re.compile(r'(\b(?:mailto:|irc://|https?://|ftp://))', re.UNICODE)
+_specialUrlPat = re.compile(r'^([^<>\]\[' + "\x00-\x20\x7f" + r']+)(.*)$', re.UNICODE)
+_protocolsPat = re.compile(r'^(mailto:|irc://|https?://|ftp://)$', re.UNICODE)
+_controlCharsPat = re.compile(r'[\]\[<>"' + "\\x00-\\x20\\x7F" + r']]', re.UNICODE)
+_hostnamePat = re.compile(r'^([^:]+:)(//[^/]+)?(.*)$', re.UNICODE)
+_stripPat = re.compile('\\s|\u00ad|\u1806|\u200b|\u2060|\ufeff|\u03f4|\u034f|\u180b|\u180c|\u180d|\u200c|\u200d|[\ufe00-\ufe0f]', re.UNICODE)
+_zomgPat = re.compile(r'^(:*)\{\|(.*)$', re.UNICODE)
+_headerPat = re.compile(r"<[Hh]([1-6])(.*?)>(.*?)</[Hh][1-6] *>", re.UNICODE)
+_templateSectionPat = re.compile(r"<!--MWTEMPLATESECTION=([^&]+)&([^_]+)-->", re.UNICODE)
+_tagPat = re.compile(r"<.*?>", re.UNICODE)
 _startRegexHash = {}
 _endRegexHash = {}
-_endCommentPat = re.compile(ur'(-->)', re.UNICODE)
+_endCommentPat = re.compile(r'(-->)', re.UNICODE)
 _extractTagsAndParams_n = 1
-_guillemetLeftPat = re.compile(ur'(.) (\?|:|;|!|\302\273)', re.UNICODE)
-_guillemetRightPat = re.compile(ur'(\302\253) ', re.UNICODE)
+_guillemetLeftPat = re.compile(r'(.) (\?|:|;|!|\302\273)', re.UNICODE)
+_guillemetRightPat = re.compile(r'(\302\253) ', re.UNICODE)
 
 def setupAttributeWhitelist():
-	common = ( u'id', u'class', u'lang', u'dir', u'title', u'style' )
-	block = common + (u'align',)
-	tablealign = ( u'align', u'char', u'charoff', u'valign' )
-	tablecell = ( u'abbr',
-					u'axis',
-					u'headers',
-					u'scope',
-					u'rowspan',
-					u'colspan',
-					u'nowrap', # deprecated
-					u'width',  # deprecated
-					u'height', # deprecated
-					u'bgcolor' # deprecated
+	common = ( 'id', 'class', 'lang', 'dir', 'title', 'style' )
+	block = common + ('align',)
+	tablealign = ( 'align', 'char', 'charoff', 'valign' )
+	tablecell = ( 'abbr',
+					'axis',
+					'headers',
+					'scope',
+					'rowspan',
+					'colspan',
+					'nowrap', # deprecated
+					'width',  # deprecated
+					'height', # deprecated
+					'bgcolor' # deprecated
 					)
 	return {
-		u'div':			block,
-		u'center':		common, # deprecated
-		u'span':		block, # ??
-		u'h1':			block,
-		u'h2':			block,
-		u'h3':			block,
-		u'h4':			block,
-		u'h5':			block,
-		u'h6':			block,
-		u'em':			common,
-		u'strong':		common,
-		u'cite':		common,
-		u'code':		common,
-		u'var':			common,
-		u'img':			common + (u'src', u'alt', u'width', u'height',),
-		u'blockquote':	common + (u'cite',),
-		u'sub':			common,
-		u'sup':			common,
-		u'p':			block,
-		u'br':			(u'id', u'class', u'title', u'style', u'clear',),
-		u'pre':			common + (u'width',),
-		u'ins':			common + (u'cite', u'datetime'),
-		u'del':			common + (u'cite', u'datetime'),
-		u'ul':			common + (u'type',),
-		u'ol':			common + (u'type', u'start'),
-		u'li':			common + (u'type', u'value'),
-		u'dl':			common,
-		u'dd':			common,
-		u'dt':			common,
-		u'table':		common + ( u'summary', u'width', u'border', u'frame',
-									u'rules', u'cellspacing', u'cellpadding',
-									u'align', u'bgcolor',
+		'div':			block,
+		'center':		common, # deprecated
+		'span':		block, # ??
+		'h1':			block,
+		'h2':			block,
+		'h3':			block,
+		'h4':			block,
+		'h5':			block,
+		'h6':			block,
+		'em':			common,
+		'strong':		common,
+		'cite':		common,
+		'code':		common,
+		'var':			common,
+		'img':			common + ('src', 'alt', 'width', 'height',),
+		'blockquote':	common + ('cite',),
+		'sub':			common,
+		'sup':			common,
+		'p':			block,
+		'br':			('id', 'class', 'title', 'style', 'clear',),
+		'pre':			common + ('width',),
+		'ins':			common + ('cite', 'datetime'),
+		'del':			common + ('cite', 'datetime'),
+		'ul':			common + ('type',),
+		'ol':			common + ('type', 'start'),
+		'li':			common + ('type', 'value'),
+		'dl':			common,
+		'dd':			common,
+		'dt':			common,
+		'table':		common + ( 'summary', 'width', 'border', 'frame',
+									'rules', 'cellspacing', 'cellpadding',
+									'align', 'bgcolor',
 							),
-		u'caption':		common + (u'align',),
-		u'thead':		common + tablealign,
-		u'tfoot':		common + tablealign,
-		u'tbody':		common + tablealign,
-		u'colgroup':	common + ( u'span', u'width' ) + tablealign,
-		u'col':			common + ( u'span', u'width' ) + tablealign,
-		u'tr':			common + ( u'bgcolor', ) + tablealign,
-		u'td':			common + tablecell + tablealign,
-		u'th':			common + tablecell + tablealign,
-		u'tt':			common,
-		u'b':			common,
-		u'i':			common,
-		u'big':			common,
-		u'small':		common,
-		u'strike':		common,
-		u's':			common,
-		u'u':			common,
-		u'font':		common + ( u'size', u'color', u'face' ),
-		u'hr':			common + ( u'noshade', u'size', u'width' ),
-		u'ruby':		common,
-		u'rb':			common,
-		u'rt':			common, #array_merge( $common, array( 'rbspan' ) ),
-		u'rp':			common,
+		'caption':		common + ('align',),
+		'thead':		common + tablealign,
+		'tfoot':		common + tablealign,
+		'tbody':		common + tablealign,
+		'colgroup':	common + ( 'span', 'width' ) + tablealign,
+		'col':			common + ( 'span', 'width' ) + tablealign,
+		'tr':			common + ( 'bgcolor', ) + tablealign,
+		'td':			common + tablecell + tablealign,
+		'th':			common + tablecell + tablealign,
+		'tt':			common,
+		'b':			common,
+		'i':			common,
+		'big':			common,
+		'small':		common,
+		'strike':		common,
+		's':			common,
+		'u':			common,
+		'font':		common + ( 'size', 'color', 'face' ),
+		'hr':			common + ( 'noshade', 'size', 'width' ),
+		'ruby':		common,
+		'rb':			common,
+		'rt':			common, #array_merge( $common, array( 'rbspan' ) ),
+		'rp':			common,
 	}
 _whitelist = setupAttributeWhitelist()
 _page_cache = {}
@@ -431,7 +432,7 @@ def registerTagHook(tag, function):
 
 class BaseParser(object):
 	def __init__(self):
-		self.uniq_prefix = u"\x07UNIQ" + six.text_type(random.randint(1, 1000000000))
+		self.uniq_prefix = "\x07UNIQ" + six.text_type(random.randint(1, 1000000000))
 		self.strip_state = {}
 		self.arg_stack = []
 		self.env = env
@@ -467,8 +468,8 @@ class BaseParser(object):
 	def parse(self, text):
 		utf8 = isinstance(text, str)
 		text = to_unicode(text)
-		if text[-1:] != u'\n':
-			text = text + u'\n'
+		if text[-1:] != '\n':
+			text = text + '\n'
 			taggedNewline = True
 		else:
 			taggedNewline = False
@@ -482,9 +483,9 @@ class BaseParser(object):
 		text = self.fixtags(text)
 		text = self.doBlockLevels(text, True)
 		text = self.unstripNoWiki(text)
-		text = text.split(u'\n')
-		text = u'\n'.join(text)
-		if taggedNewline and text[-1:] == u'\n':
+		text = text.split('\n')
+		text = '\n'.join(text)
+		if taggedNewline and text[-1:] == '\n':
 			text = text[:-1]
 		if utf8:
 			return text.encode("utf-8")
@@ -511,20 +512,20 @@ class BaseParser(object):
 			element, content, params, tag = matches[marker]
 			if render:
 				tagName = element.lower()
-				if tagName == u'!--':
+				if tagName == '!--':
 					# comment
 					output = tag
-					if tag[-3:] != u'-->':
+					if tag[-3:] != '-->':
 						output += "-->"
-				elif tagName == u'html':
+				elif tagName == 'html':
 					output = content
-				elif tagName == u'nowiki':
-					output = content.replace(u'&', u'&amp;').replace(u'<', u'&lt;').replace(u'>', u'&gt;')
+				elif tagName == 'nowiki':
+					output = content.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 				else:
 					if tagName in mTagHooks:
 						output = mTagHooks[tagName](self, content, params)
 					else:
-						output = content.replace(u'&', u'&amp;').replace(u'<', u'&lt;').replace(u'>', u'&gt;')
+						output = content.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 			else:
 				# Just stripping tags; keep the source
 				output = tag
@@ -533,9 +534,9 @@ class BaseParser(object):
 			# it won't do it itself
 			output = self.unstrip(output)
 
-			if not stripcomments and element == u'!--':
+			if not stripcomments and element == '!--':
 				commentState[marker] = output
-			elif element == u'html' or element == u'nowiki':
+			elif element == 'html' or element == 'nowiki':
 				if 'nowiki' not in self.strip_state:
 					self.strip_state['nowiki'] = {}
 				self.strip_state['nowiki'][marker] = output
@@ -560,7 +561,7 @@ class BaseParser(object):
 		"""convert bad tags into HTML identities"""
 		sb = []
 		text = self.removeHtmlComments(text)
-		bits = text.split(u'<')
+		bits = text.split('<')
 		sb.append(bits.pop(0))
 		tagstack = []
 		tablestack = tagstack
@@ -601,97 +602,97 @@ class BaseParser(object):
 								# <li> can be nested in <ul> or <ol>, skip those cases:
 								if ot not in _htmllist and t in _listtags:
 									badtag = True
-						elif t == u'table':
+						elif t == 'table':
 							if len(tablestack) == 0:
 								bagtag = True
 							else:
 								tagstack = tablestack.pop()
-					newparams = u''
+					newparams = ''
 				else:
 					# Keep track for later
-					if t in _tabletags and u'table' not in tagstack:
+					if t in _tabletags and 'table' not in tagstack:
 						badtag = True
 					elif t in tagstack and t not in _htmlnest:
 						badtag = True
 					# Is it a self-closed htmlpair? (bug 5487)
-					elif brace == u'/>' and t in _htmlpairs:
+					elif brace == '/>' and t in _htmlpairs:
 						badTag = True
 					elif t in _htmlsingleonly:
 						# Hack to force empty tag for uncloseable elements
-						brace = u'/>'
+						brace = '/>'
 					elif t in _htmlsingle:
 						# Hack to not close $htmlsingle tags
 						brace = None
 					else:
-						if t == u'table':
+						if t == 'table':
 							tablestack.append(tagstack)
 							tagstack = []
 						tagstack.append(t)
 					newparams = self.fixTagAttributes(params, t)
 				if not badtag:
-					rest = rest.replace(u'>', u'&gt;')
-					if brace == u'/>':
-						close = u' /'
+					rest = rest.replace('>', '&gt;')
+					if brace == '/>':
+						close = ' /'
 					else:
-						close = u''
-					sb.append(u'<')
+						close = ''
+					sb.append('<')
 					sb.append(slash)
 					sb.append(t)
 					sb.append(newparams)
 					sb.append(close)
-					sb.append(u'>')
+					sb.append('>')
 					sb.append(rest)
 					continue
-			sb.append(u'&lt;')
-			sb.append(x.replace(u'>', u'&gt;'))
+			sb.append('&lt;')
+			sb.append(x.replace('>', '&gt;'))
 
 		# Close off any remaining tags
 		while tagstack:
 			t = tagstack.pop()
-			sb.append(u'</')
+			sb.append('</')
 			sb.append(t)
-			sb.append(u'>\n')
-			if t == u'table':
+			sb.append('>\n')
+			if t == 'table':
 				if not tablestack:
 					break
 				tagstack = tablestack.pop()
 
-		return u''.join(sb)
+		return ''.join(sb)
 
 	def removeHtmlComments(self, text):
 		"""remove <!-- text --> comments from given text"""
 		sb = []
-		start = text.find(u'<!--')
+		start = text.find('<!--')
 		last = 0
 		while start != -1:
-			end = text.find(u'-->', start)
+			end = text.find('-->', start)
 			if end == -1:
 				break
 			end += 3
 
 			spaceStart = max(0, start-1)
 			spaceEnd = end
-			while text[spaceStart] == u' ' and spaceStart > 0:
+			while text[spaceStart] == ' ' and spaceStart > 0:
 				spaceStart -= 1
-			while text[spaceEnd] == u' ':
+			while text[spaceEnd] == ' ':
 				spaceEnd += 1
 
-			if text[spaceStart] == u'\n' and text[spaceEnd] == u'\n':
+			if text[spaceStart] == '\n' and text[spaceEnd] == '\n':
 				sb.append(text[last:spaceStart])
-				sb.append(u'\n')
+				sb.append('\n')
 				last = spaceEnd+1
 			else:
 				sb.append(text[last:spaceStart+1])
 				last = spaceEnd
 
-			start = text.find(u'<!--', end)
+			start = text.find('<!--', end)
 		sb.append(text[last:])
-		return u''.join(sb)
+		return ''.join(sb)
 
 	def decodeTagAttributes(self, text):
 		"""docstring for decodeTagAttributes"""
 		attribs = OrderedDict()
-		if text.strip() == u'':
+		if text.strip() == '':
 			return attribs
 		scanner = _attributePat.scanner(text)
 		match = scanner.search()
@@ -699,7 +700,7 @@ class BaseParser(object):
 			key, val1, val2, val3, val4 = match.groups()
 			value = val1 or val2 or val3 or val4
 			if value:
-				value = _space.sub(u' ', value).strip()
+				value = _space.sub(' ', value).strip()
 			else:
 				value = ''
 			attribs[key] = self.decodeCharReferences(value)
@@ -719,11 +720,11 @@ class BaseParser(object):
 				continue
 			# Strip javascript "expression" from stylesheets.
 			# http://msdn.microsoft.com/workshop/author/dhtml/overview/recalc.asp
-			if attribute == u'style':
+			if attribute == 'style':
 				value = self.checkCss(value)
 				if value == False:
 					continue
-			elif attribute == u'id':
+			elif attribute == 'id':
 				value = self.escapeId(value)
 			# If this attribute was previously set, override it.
 			# Output should only have one attribute of each name.
@@ -732,26 +733,26 @@ class BaseParser(object):
 
 	def safeEncodeAttribute(self, encValue):
 		"""docstring for safeEncodeAttribute"""
-		encValue = encValue.replace(u'&', u'&amp;')
-		encValue = encValue.replace(u'<', u'&lt;')
-		encValue = encValue.replace(u'>', u'&gt;')
-		encValue = encValue.replace(u'"', u'&quot;')
-		encValue = encValue.replace(u'{', u'&#123;')
-		encValue = encValue.replace(u'[', u'&#91;')
-		encValue = encValue.replace(u"''", u'&#39;&#39;')
-		encValue = encValue.replace(u'ISBN', u'&#73;SBN')
-		encValue = encValue.replace(u'RFC', u'&#82;FC')
-		encValue = encValue.replace(u'PMID', u'&#80;MID')
-		encValue = encValue.replace(u'|', u'&#124;')
-		encValue = encValue.replace(u'__', u'&#95;_')
-		encValue = encValue.replace(u'\n', u'&#10;')
-		encValue = encValue.replace(u'\r', u'&#13;')
-		encValue = encValue.replace(u'\t', u'&#9;')
+		encValue = encValue.replace('&', '&amp;')
+		encValue = encValue.replace('<', '&lt;')
+		encValue = encValue.replace('>', '&gt;')
+		encValue = encValue.replace('"', '&quot;')
+		encValue = encValue.replace('{', '&#123;')
+		encValue = encValue.replace('[', '&#91;')
+		encValue = encValue.replace("''", '&#39;&#39;')
+		encValue = encValue.replace('ISBN', '&#73;SBN')
+		encValue = encValue.replace('RFC', '&#82;FC')
+		encValue = encValue.replace('PMID', '&#80;MID')
+		encValue = encValue.replace('|', '&#124;')
+		encValue = encValue.replace('__', '&#95;_')
+		encValue = encValue.replace('\n', '&#10;')
+		encValue = encValue.replace('\r', '&#13;')
+		encValue = encValue.replace('\t', '&#9;')
 		return encValue
 
 	def fixTagAttributes(self, text, element):
-		if text.strip() == u'':
-			return u''
+		if text.strip() == '':
+			return ''
 
 		stripped = self.validateTagAttributes(self.decodeTagAttributes(text), element)
 
@@ -759,16 +760,16 @@ class BaseParser(object):
 
 		for attribute in stripped:
 			value = stripped[attribute]
-			encAttribute = attribute.replace(u'&', u'&amp;').replace(u'<', u'&lt;').replace(u'>', u'&gt;')
+			encAttribute = attribute.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 			encValue = self.safeEncodeAttribute(value)
 
-			sb.append(u' ')
+			sb.append(' ')
 			sb.append(encAttribute)
-			sb.append(u'="')
+			sb.append('="')
 			sb.append(encValue)
-			sb.append(u'"')
+			sb.append('"')
 
-		return u''.join(sb)
+		return ''.join(sb)
 
 	def validateCodepoint(self, codepoint):
 		return codepoint ==	0x09 \
@@ -782,29 +783,29 @@ class BaseParser(object):
 		text, norm, dec, hexval, _ = match.groups()
 		if norm:
 			sb = []
-			sb.append(u'&')
+			sb.append('&')
 			if norm not in _htmlEntities:
-				sb.append(u'amp;')
+				sb.append('amp;')
 			sb.append(norm)
-			sb.append(u';')
-			return u''.join(sb)
+			sb.append(';')
+			return ''.join(sb)
 		elif dec:
 			dec = int(dec)
 			if self.validateCodepoint(dec):
 				sb = []
-				sb.append(u'&#')
+				sb.append('&#')
 				sb.append(dec)
-				sb.append(u';')
-				return u''.join(sb)
+				sb.append(';')
+				return ''.join(sb)
 		elif hexval:
 			hexval = int(hexval, 16)
 			if self.validateCodepoint(hexval):
 				sb = []
-				sb.append(u'&#x')
+				sb.append('&#x')
 				sb.append(hex(hexval))
-				sb.append(u';')
-				return u''.join(sb)
-		return text.replace(u'&', u'&amp;').replace(u'<', u'&lt;').replace(u'>', u'&gt;')
+				sb.append(';')
+				return ''.join(sb)
+		return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 	def normalizeCharReferences(self, text):
 		"""docstring for normalizeCharReferences"""
@@ -814,23 +815,23 @@ class BaseParser(object):
 		text, norm, dec, hexval, _ = match.groups()
 		if norm:
 			if norm in _htmlEntities:
-				return unichr(_htmlEntities[norm])
+				return chr(_htmlEntities[norm])
 			else:
 				sb = []
-				sb.append(u'&')
+				sb.append('&')
 				sb.append(norm)
-				sb.append(u';')
-				return u''.join(sb)
+				sb.append(';')
+				return ''.join(sb)
 		elif dec:
 			dec = int(dec)
 			if self.validateCodepoint(dec):
-				return unichr(dec)
-			return u'?'
+				return chr(dec)
+			return '?'
 		elif hexval:
 			hexval = int(hexval, 16)
 			if self.validateCodepoint(dec):
-				return unichr(dec)
-			return u'?'
+				return chr(dec)
+			return '?'
 		return text
 
 	def decodeCharReferences(self, text):
@@ -840,17 +841,17 @@ class BaseParser(object):
 		return ''
 
 	def _convertToUtf8(self, s):
-		return unichr(int(s.group(1), 16))
+		return chr(int(s.group(1), 16))
 
 	def checkCss(self, value):
 		"""docstring for checkCss"""
 		stripped = self.decodeCharReferences(value)
 
-		stripped = _cssCommentPat.sub(u'', stripped)
+		stripped = _cssCommentPat.sub('', stripped)
 		value = stripped
 
 		stripped = _toUTFPat.sub(self._convertToUtf8, stripped)
-		stripped.replace(u'\\', u'')
+		stripped.replace('\\', '')
 		if _hackPat.search(stripped):
 			# someone is haxx0ring
 			return False
@@ -863,15 +864,15 @@ class BaseParser(object):
 		return safe_name(value)
 
 	def parseHorizontalRule(self, text):
-		return _hrPat.sub(ur'<hr />', text)
+		return _hrPat.sub(r'<hr />', text)
 
 	def parseHeaders(self, text):
-		text = _h6Pat.sub(ur'<h6>\1</h6>', text)
-		text = _h5Pat.sub(ur'<h5>\1</h5>', text)
-		text = _h4Pat.sub(ur'<h4>\1</h4>', text)
-		text = _h3Pat.sub(ur'<h3>\1</h3>', text)
-		text = _h2Pat.sub(ur'<h2>\1</h2>', text)
-		text = _h1Pat.sub(ur'<h1>\1</h1>', text)
+		text = _h6Pat.sub(r'<h6>\1</h6>', text)
+		text = _h5Pat.sub(r'<h5>\1</h5>', text)
+		text = _h4Pat.sub(r'<h4>\1</h4>', text)
+		text = _h3Pat.sub(r'<h3>\1</h3>', text)
+		text = _h2Pat.sub(r'<h2>\1</h2>', text)
+		text = _h1Pat.sub(r'<h1>\1</h1>', text)
 		return text
 
 	def parseQuotes(self, text):
@@ -887,11 +888,11 @@ class BaseParser(object):
 			if i%2 == 1:
 				l = len(r)
 				if l == 4:
-					arr[i-1] += u"'"
-					arr[i] = u"'''"
+					arr[i-1] += "'"
+					arr[i] = "'''"
 				elif l > 5:
-					arr[i-1] += u"'" * (len(arr[i]) - 5)
-					arr[i] = u"'''''"
+					arr[i-1] += "'" * (len(arr[i]) - 5)
+					arr[i] = "'''''"
 				if l == 2:
 					numItalics += 1
 				elif l >= 5:
@@ -912,10 +913,10 @@ class BaseParser(object):
 				if i%2 == 1 and len(r) == 3:
 					x1 = arr[i-1][-1:]
 					x2 = arr[i-1][-2:-1]
-					if x1 == u' ':
+					if x1 == ' ':
 						if firstSpace == -1:
 							firstSpace = i
-					elif x2 == u' ':
+					elif x2 == ' ':
 						if firstSingleLetterWord == -1:
 							firstSingleLetterWord = i
 					else:
@@ -924,18 +925,18 @@ class BaseParser(object):
 
 			# If there is a single-letter word, use it!
 			if firstSingleLetterWord > -1:
-				arr[firstSingleLetterWord] = u"''"
-				arr[firstSingleLetterWord-1] += u"'"
+				arr[firstSingleLetterWord] = "''"
+				arr[firstSingleLetterWord-1] += "'"
 			# If not, but there's a multi-letter word, use that one.
 			elif firstMultiLetterWord > -1:
-				arr[firstMultiLetterWord] = u"''"
-				arr[firstMultiLetterWord-1] += u"'"
+				arr[firstMultiLetterWord] = "''"
+				arr[firstMultiLetterWord-1] += "'"
 			# ... otherwise use the first one that has neither.
 			# (notice that it is possible for all three to be -1 if, for example,
 			# there is only one pentuple-apostrophe in the line)
 			elif firstSpace > -1:
-				arr[firstSpace] = u"''"
-				arr[firstSpace-1] += u"'"
+				arr[firstSpace] = "''"
+				arr[firstSpace-1] += "'"
 
 		# Now let's actually convert our apostrophic mush to HTML!
 		output = []
@@ -950,96 +951,96 @@ class BaseParser(object):
 			else:
 				if len(r) == 2:
 					if state == 'i':
-						output.append(u"</i>")
+						output.append("</i>")
 						state = ''
 					elif state == 'bi':
-						output.append(u"</i>")
+						output.append("</i>")
 						state = 'b'
 					elif state == 'ib':
-						output.append(u"</b></i><b>")
+						output.append("</b></i><b>")
 						state = 'b'
 					elif state == 'both':
-						output.append(u"<b><i>")
-						output.append(u''.join(buffer))
+						output.append("<b><i>")
+						output.append(''.join(buffer))
 						buffer = None
-						output.append(u"</i>")
+						output.append("</i>")
 						state = 'b'
 					elif state == 'b':
-						output.append(u"<i>")
+						output.append("<i>")
 						state = 'bi'
 					else: # ''
-						output.append(u"<i>")
+						output.append("<i>")
 						state = 'i'
 				elif len(r) == 3:
 					if state == 'b':
-						output.append(u"</b>")
+						output.append("</b>")
 						state = ''
 					elif state == 'bi':
-						output.append(u"</i></b><i>")
+						output.append("</i></b><i>")
 						state = 'i'
 					elif state == 'ib':
-						output.append(u"</b>")
+						output.append("</b>")
 						state = 'i'
 					elif state == 'both':
-						output.append(u"<i><b>")
-						output.append(u''.join(buffer))
+						output.append("<i><b>")
+						output.append(''.join(buffer))
 						buffer = None
-						output.append(u"</b>")
+						output.append("</b>")
 						state = 'i'
 					elif state == 'i':
-						output.append(u"<b>")
+						output.append("<b>")
 						state = 'ib'
 					else: # ''
-						output.append(u"<b>")
+						output.append("<b>")
 						state = 'b'
 				elif len(r) == 5:
 					if state == 'b':
-						output.append(u"</b><i>")
+						output.append("</b><i>")
 						state = 'i'
 					elif state == 'i':
-						output.append(u"</i><b>")
+						output.append("</i><b>")
 						state = 'b'
 					elif state == 'bi':
-						output.append(u"</i></b>")
+						output.append("</i></b>")
 						state = ''
 					elif state == 'ib':
-						output.append(u"</b></i>")
+						output.append("</b></i>")
 						state = ''
 					elif state == 'both':
-						output.append(u"<i><b>")
-						output.append(u''.join(buffer))
+						output.append("<i><b>")
+						output.append(''.join(buffer))
 						buffer = None
-						output.append(u"</b></i>")
+						output.append("</b></i>")
 						state = ''
 					else: # ''
 						buffer = []
 						state = 'both'
 
 		if state == 'both':
-			output.append(u"<i><b>")
-			output.append(u''.join(buffer))
+			output.append("<i><b>")
+			output.append(''.join(buffer))
 			buffer = None
-			output.append(u"</b></i>")
+			output.append("</b></i>")
 		elif state != '':
 			if state == 'b' or state == 'ib':
-				output.append(u"</b>")
+				output.append("</b>")
 			if state == 'i' or state == 'bi' or state == 'ib':
-				output.append(u"</i>")
+				output.append("</i>")
 			if state == 'bi':
-				output.append(u"</b>")
-		return u''.join(output)
+				output.append("</b>")
+		return ''.join(output)
 
 	def parseAllQuotes(self, text):
 		sb = []
-		lines = text.split(u'\n')
+		lines = text.split('\n')
 		first = True
 		for line in lines:
 			if not first:
-				sb.append(u'\n')
+				sb.append('\n')
 			else:
 				first = False
 			sb.append(self.parseQuotes(line))
-		return u''.join(sb)
+		return ''.join(sb)
 
 	def replaceExternalLinks(self, text):
 		sb = []
@@ -1053,17 +1054,17 @@ class BaseParser(object):
 				sb.append(bits[i])
 				i += 1
 			else:
-				sb.append(u'<a href="')
+				sb.append('<a href="')
 				sb.append(bits[i])
-				sb.append(u'" alt="')
+				sb.append('" alt="')
 				sb.append(bits[i+1])
-				sb.append(u'">')
+				sb.append('">')
 				if not bits[i+1]:
 					num_links += 1
 					sb.append(to_unicode(truncate_url(bits[i])))
 				else:
 					sb.append(bits[i+1])
-				sb.append(u'</a>')
+				sb.append('</a>')
 				i += 2
 		return ''.join(sb)
 
@@ -1118,11 +1119,11 @@ class BaseParser(object):
 
 				url = self.cleanURL(url)
 
-				sb.append(u'<a href="')
+				sb.append('<a href="')
 				sb.append(url)
-				sb.append(u'">')
+				sb.append('">')
 				sb.append(truncate_url(url))
-				sb.append(u'</a>')
+				sb.append('</a>')
 				#sb.append(text)
 				sb.append(trail)
 			else:
@@ -1197,14 +1198,14 @@ class BaseParser(object):
 		  array( 'param' => 'x' ),
 		  '<element param="x">tag content</element>' ) )
 		"""
-		stripped = u''
+		stripped = ''
 
-		taglist = u'|'.join(elements)
+		taglist = '|'.join(elements)
 		if taglist not in _startRegexHash:
-			_startRegexHash[taglist] = re.compile(ur"<(" + taglist + ur")(\s+[^>]*?|\s*?)(/?>)|<(!--)", re.UNICODE | re.IGNORECASE)
+			_startRegexHash[taglist] = re.compile(r"<(" + taglist + r")(\s+[^>]*?|\s*?)(/?>)|<(!--)", re.UNICODE | re.IGNORECASE)
 		start = _startRegexHash[taglist]
 
-		while text != u'':
+		while text != '':
 			p = start.split(text, 1)
 			stripped += p[0]
 			if len(p) == 1:
@@ -1212,8 +1213,8 @@ class BaseParser(object):
 			elif p[4]:
 				# comment
 				element = p[4]
-				attributes = u''
-				close = u''
+				attributes = ''
+				close = ''
 			else:
 				element = p[1]
 				attributes = p[2]
@@ -1221,21 +1222,21 @@ class BaseParser(object):
 			inside = p[5]
 
 			global _extractTagsAndParams_n
-			marker = self.uniq_prefix + u'-' + element + u'-' + (u"%08X" % _extractTagsAndParams_n) + u'-QINU'
+			marker = self.uniq_prefix + '-' + element + '-' + ("%08X" % _extractTagsAndParams_n) + '-QINU'
 			_extractTagsAndParams_n += 1
 			stripped += marker
 
-			if close == u'/>':
+			if close == '/>':
 				# empty element tag, <tag />
 				content = None
 				text = inside
 				tail = None
 			else:
-				if element == u'!--':
+				if element == '!--':
 					end = _endCommentPat
 				else:
 					if element not in _endRegexHash:
-						_endRegexHash[element] = re.compile(ur'(</' + element + ur'\s*>)', re.UNICODE | re.IGNORECASE)
+						_endRegexHash[element] = re.compile(r'(</' + element + r'\s*>)', re.UNICODE | re.IGNORECASE)
 					end = _endRegexHash[element]
 				q = end.split(inside, 1)
 				content = q[0]
@@ -1251,7 +1252,7 @@ class BaseParser(object):
 				element,
 				content,
 				self.decodeTagAttributes(attributes),
-				u"<" + element + attributes + close + content + tail
+				"<" + element + attributes + close + content + tail
 			)
 		return stripped
 
@@ -1259,16 +1260,16 @@ class BaseParser(object):
 		"""Clean up special characters, only run once, next-to-last before doBlockLevels"""
 		# french spaces, last one Guillemet-left
 		# only if there is something before the space
-		text = _guillemetLeftPat.sub(ur'\1&nbsp;\2', text)
+		text = _guillemetLeftPat.sub(r'\1&nbsp;\2', text)
 		# french spaces, Guillemet-right
-		text = _guillemetRightPat.sub(ur'\1&nbsp;', text)
+		text = _guillemetRightPat.sub(r'\1&nbsp;', text)
 		return text
 
 	def closeParagraph(self, mLastSection):
 		"""Used by doBlockLevels()"""
-		result = u''
-		if mLastSection != u'':
-			result = u'</' + mLastSection + u'>\n'
+		result = ''
+		if mLastSection != '':
+			result = '</' + mLastSection + '>\n'
 
 		return result
 
@@ -1297,45 +1298,45 @@ class BaseParser(object):
 		result = self.closeParagraph(mLastSection)
 
 		mDTopen = False
-		if char == u'*':
-			result += u'<ul><li>'
-		elif char == u'#':
-			result += u'<ol><li>'
-		elif char == u':':
-			result += u'<dl><dd>'
-		elif char == u';':
-			result += u'<dl><dt>'
+		if char == '*':
+			result += '<ul><li>'
+		elif char == '#':
+			result += '<ol><li>'
+		elif char == ':':
+			result += '<dl><dd>'
+		elif char == ';':
+			result += '<dl><dt>'
 			mDTopen = True
 		else:
-			result += u'<!-- ERR 1 -->'
+			result += '<!-- ERR 1 -->'
 
 		return result, mDTopen
 
 	def nextItem(self, char, mDTopen):
-		if char == u'*' or char == '#':
-			return u'</li><li>', None
-		elif char == u':' or char == u';':
-			close = u'</dd>'
+		if char == '*' or char == '#':
+			return '</li><li>', None
+		elif char == ':' or char == ';':
+			close = '</dd>'
 			if mDTopen:
 				close = '</dt>'
-			if char == u';':
-				return close + u'<dt>', True
+			if char == ';':
+				return close + '<dt>', True
 			else:
-				return close + u'<dd>', False
-		return u'<!-- ERR 2 -->'
+				return close + '<dd>', False
+		return '<!-- ERR 2 -->'
 
 	def closeList(self, char, mDTopen):
-		if char == u'*':
-			return u'</li></ul>\n'
-		elif char == u'#':
-			return u'</li></ol>\n'
-		elif char == u':':
+		if char == '*':
+			return '</li></ul>\n'
+		elif char == '#':
+			return '</li></ol>\n'
+		elif char == ':':
 			if mDTopen:
-				return u'</dt></dl>\n'
+				return '</dt></dl>\n'
 			else:
-				return u'</dd></dl>\n'
+				return '</dd></dl>\n'
 		else:
-			return u'<!-- ERR 3 -->'
+			return '<!-- ERR 3 -->'
 
 	def findColonNoLinks(self, text, before, after):
 		try:
@@ -1435,13 +1436,13 @@ class BaseParser(object):
 		# Parsing through the text line by line.  The main thing
 		# happening here is handling of block-level elements p, pre,
 		# and making lists from lines starting with * # : etc.
-		lastPrefix = u''
+		lastPrefix = ''
 		mDTopen = inBlockElem = False
 		prefixLength = 0
 		paragraphStack = False
-		_closeMatchPat = re.compile(ur"(</table|</blockquote|</h1|</h2|</h3|</h4|</h5|</h6|<td|<th|<div|</div|<hr|</pre|</p|" +  self.uniq_prefix + ur"-pre|</li|</ul|</ol|<center)", re.UNICODE | re.IGNORECASE)
+		_closeMatchPat = re.compile(r"(</table|</blockquote|</h1|</h2|</h3|</h4|</h5|</h6|<td|<th|<div|</div|<hr|</pre|</p|" +  self.uniq_prefix + r"-pre|</li|</ul|</ol|<center)", re.UNICODE | re.IGNORECASE)
 		mInPre = False
-		mLastSection = u''
+		mLastSection = ''
 		mDTopen = False
 		output = []
 		for oLine in text.split('\n')[not linestart and 1 or 0:]:
@@ -1449,7 +1450,7 @@ class BaseParser(object):
 			preCloseMatch = _closePrePat.search(oLine)
 			preOpenMatch = _openPrePat.search(oLine)
 			if not mInPre:
-				chars = u'*#:;'
+				chars = '*#:;'
 				prefixLength = 0
 				for c in oLine:
 					if c in chars:
@@ -1459,13 +1460,13 @@ class BaseParser(object):
 				pref = oLine[0:prefixLength]
 
 				# eh?
-				pref2 = pref.replace(u';', u':')
+				pref2 = pref.replace(';', ':')
 				t = oLine[prefixLength:]
 				mInPre = bool(preOpenMatch)
 			else:
 				# Don't interpret any other prefixes in preformatted text
 				prefixLength = 0
-				pref = pref2 = u''
+				pref = pref2 = ''
 				t = oLine
 
 			# List generation
@@ -1477,18 +1478,18 @@ class BaseParser(object):
 					mDTopen = tmpMDTopen
 				paragraphStack = False
 
-				if pref[-1:] == u';':
+				if pref[-1:] == ';':
 					# The one nasty exception: definition lists work like this:
 					# ; title : definition text
 					# So we check for : in the remainder text to split up the
 					# title and definition, without b0rking links.
-					term = t2 = u''
+					term = t2 = ''
 					z = self.findColonNoLinks(t, term, t2)
 					if z != False:
 						term, t2 = z[1:2]
 						t = t2
 						output.append(term)
-						tmpOutput, tmpMDTopen = self.nextItem(u':', mDTopen)
+						tmpOutput, tmpMDTopen = self.nextItem(':', mDTopen)
 						output.append(tmpOutput)
 						if tmpMDTopen is not None:
 							mDTopen = tmpMDTopen
@@ -1514,18 +1515,18 @@ class BaseParser(object):
 					if tmpMDTOpen:
 						mDTopen = True
 					output.append(tmpOutput)
-					mLastSection = u''
+					mLastSection = ''
 					mInPre = False
 
-					if char == u';':
+					if char == ';':
 						# FIXME: This is dupe of code above
-						term = t2 = u''
+						term = t2 = ''
 						z = self.findColonNoLinks(t, term, t2)
 						if z != False:
 							term, t2 = z[1:2]
 							t = t2
 							output.append(term)
-							tmpOutput, tmpMDTopen = self.nextItem(u':', mDTopen)
+							tmpOutput, tmpMDTopen = self.nextItem(':', mDTopen)
 							output.append(tmpOutput)
 							if tmpMDTopen is not None:
 								mDTopen = tmpMDTopen
@@ -1542,44 +1543,44 @@ class BaseParser(object):
 				if openmatch or closematch:
 					paragraphStack = False
 					output.append(self.closeParagraph(mLastSection))
-					mLastSection = u''
+					mLastSection = ''
 					if preCloseMatch:
 						mInPre = False
 					if preOpenMatch:
 						mInPre = True
 					inBlockElem = bool(not closematch)
 				elif not inBlockElem and not mInPre:
-					if t[0:1] == u' ' and (mLastSection ==  u'pre' or t.strip() != u''):
+					if t[0:1] == ' ' and (mLastSection ==  'pre' or t.strip() != ''):
 						# pre
-						if mLastSection != u'pre':
+						if mLastSection != 'pre':
 							paragraphStack = False
-							output.append(self.closeParagraph(u'') + u'<pre>')
+							output.append(self.closeParagraph('') + '<pre>')
 							mInPre = False
-							mLastSection = u'pre'
+							mLastSection = 'pre'
 						t = t[1:]
 					else:
 						# paragraph
-						if t.strip() == u'':
+						if t.strip() == '':
 							if paragraphStack:
-								output.append(paragraphStack + u'<br />')
+								output.append(paragraphStack + '<br />')
 								paragraphStack = False
-								mLastSection = u'p'
+								mLastSection = 'p'
 							else:
-								if mLastSection != u'p':
+								if mLastSection != 'p':
 									output.append(self.closeParagraph(mLastSection))
-									mLastSection = u''
+									mLastSection = ''
 									mInPre = False
-									paragraphStack = u'<p>'
+									paragraphStack = '<p>'
 								else:
-									paragraphStack = u'</p><p>'
+									paragraphStack = '</p><p>'
 						else:
 							if paragraphStack:
 								output.append(paragraphStack)
 								paragraphStack = False
-								mLastSection = u'p'
-							elif mLastSection != u'p':
-								output.append(self.closeParagraph(mLastSection) + u'<p>')
-								mLastSection = u'p'
+								mLastSection = 'p'
+							elif mLastSection != 'p':
+								output.append(self.closeParagraph(mLastSection) + '<p>')
+								mLastSection = 'p'
 								mInPre = False
 
 			# somewhere above we forget to get out of pre block (bug 785)
@@ -1587,16 +1588,16 @@ class BaseParser(object):
 				mInPre = False
 
 			if paragraphStack == False:
-				output.append(t + u"\n")
+				output.append(t + "\n")
 
 		while prefixLength:
 			output.append(self.closeList(pref2[prefixLength-1], mDTopen))
 			mDTopen = False
 			prefixLength -= 1
 
-		if mLastSection != u'':
-			output.append(u'</' + mLastSection + u'>')
-			mLastSection = u''
+		if mLastSection != '':
+			output.append('</' + mLastSection + '>')
+			mLastSection = ''
 
 		return ''.join(output)
 
@@ -1608,8 +1609,8 @@ class Parser(BaseParser):
 	def parse(self, text):
 		utf8 = isinstance(text, str)
 		text = to_unicode(text)
-		if text[-1:] != u'\n':
-			text = text + u'\n'
+		if text[-1:] != '\n':
+			text = text + '\n'
 			taggedNewline = True
 		else:
 			taggedNewline = False
@@ -1622,32 +1623,32 @@ class Parser(BaseParser):
 		text = self.parseHeaders(text)
 		text = self.parseAllQuotes(text)
 		text = self.replaceExternalLinks(text)
-		if not self.show_toc and text.find(u"<!--MWTOC-->") == -1:
+		if not self.show_toc and text.find("<!--MWTOC-->") == -1:
 			self.show_toc = False
 		text = self.formatHeadings(text, True)
 		text = self.unstrip(text)
 		text = self.fixtags(text)
 		text = self.doBlockLevels(text, True)
 		text = self.unstripNoWiki(text)
-		text = text.split(u'\n')
-		text = u'\n'.join(text)
-		if taggedNewline and text[-1:] == u'\n':
+		text = text.split('\n')
+		text = '\n'.join(text)
+		if taggedNewline and text[-1:] == '\n':
 			text = text[:-1]
 		if utf8:
 			return text.encode("utf-8")
 		return text
 
 	def checkTOC(self, text):
-		if text.find(u"__NOTOC__") != -1:
-			text = text.replace(u"__NOTOC__", u"")
+		if text.find("__NOTOC__") != -1:
+			text = text.replace("__NOTOC__", "")
 			self.show_toc = False
-		if text.find(u"__TOC__") != -1:
-			text = text.replace(u"__TOC__", u"<!--MWTOC-->")
+		if text.find("__TOC__") != -1:
+			text = text.replace("__TOC__", "<!--MWTOC-->")
 			self.show_toc = True
 		return text
 
 	def doTableStuff(self, text):
-		t = text.split(u"\n")
+		t = text.split("\n")
 		td = [] # Is currently a td tag open?
 		ltd = [] # Was it TD or TH?
 		tr = [] # Is currently a tr tag open?
@@ -1664,96 +1665,96 @@ class Parser(BaseParser):
 
 				attributes = self.unstripForHTML(matches.group(2))
 
-				t[k] = u'<dl><dd>'*indent_level + u'<table' + self.fixTagAttributes(attributes, u'table') + u'>'
+				t[k] = '<dl><dd>'*indent_level + '<table' + self.fixTagAttributes(attributes, 'table') + '>'
 				td.append(False)
-				ltd.append(u'')
+				ltd.append('')
 				tr.append(False)
-				ltr.append(u'')
+				ltr.append('')
 				has_opened_tr.append(False)
 			elif len(td) == 0:
 				pass
-			elif u'|}' == x[0:2]:
-				z = u"</table>" + x[2:]
+			elif '|}' == x[0:2]:
+				z = "</table>" + x[2:]
 				l = ltd.pop()
 				if not has_opened_tr.pop():
-					z = u"<tr><td></td><tr>" + z
+					z = "<tr><td></td><tr>" + z
 				if tr.pop():
-					z = u"</tr>" + z
+					z = "</tr>" + z
 				if td.pop():
-					z = u'</' + l + u'>' + z
+					z = '</' + l + '>' + z
 				ltr.pop()
-				t[k] = z + u'</dd></dl>'*indent_level
-			elif u'|-' == x[0:2]: # Allows for |-------------
+				t[k] = z + '</dd></dl>'*indent_level
+			elif '|-' == x[0:2]: # Allows for |-------------
 				x = x[1:]
-				while x != u'' and x[0:1] == '-':
+				while x != '' and x[0:1] == '-':
 					x = x[1:]
 				z = ''
 				l = ltd.pop()
 				has_opened_tr.pop()
 				has_opened_tr.append(True)
 				if tr.pop():
-					z = u'</tr>' + z
+					z = '</tr>' + z
 				if td.pop():
-					z = u'</' + l + u'>' + z
+					z = '</' + l + '>' + z
 				ltr.pop()
 				t[k] = z
 				tr.append(False)
 				td.append(False)
-				ltd.append(u'')
+				ltd.append('')
 				attributes = self.unstripForHTML(x)
-				ltr.append(self.fixTagAttributes(attributes, u'tr'))
-			elif u'|' == fc or u'!' == fc or u'|+' == x[0:2]: # Caption
+				ltr.append(self.fixTagAttributes(attributes, 'tr'))
+			elif '|' == fc or '!' == fc or '|+' == x[0:2]: # Caption
 				# x is a table row
-				if u'|+' == x[0:2]:
-					fc = u'+'
+				if '|+' == x[0:2]:
+					fc = '+'
 					x = x[1:]
 				x = x[1:]
-				if fc == u'!':
-					x = x.replace(u'!!', u'||')
+				if fc == '!':
+					x = x.replace('!!', '||')
 				# Split up multiple cells on the same line.
 				# FIXME: This can result in improper nesting of tags processed
 				# by earlier parser steps, but should avoid splitting up eg
 				# attribute values containing literal "||".
-				x = x.split(u'||')
+				x = x.split('||')
 
-				t[k] = u''
+				t[k] = ''
 
 				# Loop through each table cell
 				for theline in x:
 					z = ''
-					if fc != u'+':
+					if fc != '+':
 						tra = ltr.pop()
 						if not tr.pop():
-							z = u'<tr' + tra + u'>\n'
+							z = '<tr' + tra + '>\n'
 						tr.append(True)
-						ltr.append(u'')
+						ltr.append('')
 						has_opened_tr.pop()
 						has_opened_tr.append(True)
 					l = ltd.pop()
 					if td.pop():
-						z = u'</' + l + u'>' + z
-					if fc == u'|':
-						l = u'td'
-					elif fc == u'!':
-						l = u'th'
-					elif fc == u'+':
-						l = u'caption'
+						z = '</' + l + '>' + z
+					if fc == '|':
+						l = 'td'
+					elif fc == '!':
+						l = 'th'
+					elif fc == '+':
+						l = 'caption'
 					else:
-						l = u''
+						l = ''
 					ltd.append(l)
 
 					#Cell parameters
-					y = theline.split(u'|', 1)
+					y = theline.split('|', 1)
 					# Note that a '|' inside an invalid link should not
 					# be mistaken as delimiting cell parameters
-					if y[0].find(u'[[') != -1:
+					if y[0].find('[[') != -1:
 						y = [theline]
 
 					if len(y) == 1:
-						y = z + u"<" + l + u">" + y[0]
+						y = z + "<" + l + ">" + y[0]
 					else:
 						attributes = self.unstripForHTML(y[0])
-						y = z + u"<" + l + self.fixTagAttributes(attributes, l) + u">" + y[1]
+						y = z + "<" + l + self.fixTagAttributes(attributes, l) + ">" + y[1]
 
 					t[k] += y
 					td.append(True)
@@ -1761,17 +1762,17 @@ class Parser(BaseParser):
 		while len(td) > 0:
 			l = ltd.pop()
 			if td.pop():
-				t.append(u'</td>')
+				t.append('</td>')
 			if tr.pop():
-				t.append(u'</tr>')
+				t.append('</tr>')
 			if not has_opened_tr.pop():
-				t.append(u'<tr><td></td></tr>')
-			t.append(u'</table>')
+				t.append('<tr><td></td></tr>')
+			t.append('</table>')
 
-		text = u'\n'.join(t)
+		text = '\n'.join(t)
 		# special case: don't return empty table
-		if text == u"<table>\n<tr><td></td></tr>\n</table>":
-			text = u''
+		if text == "<table>\n<tr><td></td></tr>\n</table>":
+			text = ''
 
 		return text
 
@@ -1789,9 +1790,9 @@ class Parser(BaseParser):
 		doNumberHeadings = False
 		showEditLink = True # Can User Edit
 
-		if text.find(u"__NOEDITSECTION__") != -1:
+		if text.find("__NOEDITSECTION__") != -1:
 			showEditLink = False
-			text = text.replace(u"__NOEDITSECTION__", u"")
+			text = text.replace("__NOEDITSECTION__", "")
 
 		# Get all headlines for numbering them and adding funky stuff like [edit]
 		# links - this is for later, but we need the number of headlines right now
@@ -1800,20 +1801,20 @@ class Parser(BaseParser):
 
 		# if there are fewer than 4 headlines in the article, do not show TOC
 		# unless it's been explicitly enabled.
-		enoughToc = self.show_toc and (numMatches >= 4 or text.find(u"<!--MWTOC-->") != -1)
+		enoughToc = self.show_toc and (numMatches >= 4 or text.find("<!--MWTOC-->") != -1)
 
 		# Allow user to stipulate that a page should have a "new section"
 		# link added via __NEWSECTIONLINK__
 		showNewSection = False
-		if text.find(u"__NEWSECTIONLINK__") != -1:
+		if text.find("__NEWSECTIONLINK__") != -1:
 			showNewSection = True
-			text = text.replace(u"__NEWSECTIONLINK__", u"")
+			text = text.replace("__NEWSECTIONLINK__", "")
 		# if the string __FORCETOC__ (not case-sensitive) occurs in the HTML,
 		# override above conditions and always show TOC above first header
-		if text.find(u"__FORCETOC__") != -1:
+		if text.find("__FORCETOC__") != -1:
 			self.show_toc = True
 			enoughToc = True
-			text = text.replace(u"__FORCETOC__", u"")
+			text = text.replace("__FORCETOC__", "")
 		# Never ever show TOC if no headers
 		if numMatches < 1:
 			enoughToc = False
@@ -1840,7 +1841,7 @@ class Parser(BaseParser):
 		for match in matches:
 			headline = match[2]
 			istemplate = False
-			templatetitle = u''
+			templatetitle = ''
 			templatesection = 0
 			numbering = []
 
@@ -1849,7 +1850,7 @@ class Parser(BaseParser):
 				istemplate = True
 				templatetitle = b64decode(m[0])
 				templatesection = 1 + int(b64decode(m[1]))
-				headline = _templateSectionPat.sub(u'', headline)
+				headline = _templateSectionPat.sub('', headline)
 
 			if toclevel:
 				prevlevel = level
@@ -1862,7 +1863,7 @@ class Parser(BaseParser):
 					toclevel += 1
 					sublevelCount[toclevel] = 0
 					if toclevel < wgMaxTocLevel:
-						toc.append(u'\n<ul>')
+						toc.append('\n<ul>')
 				elif level < prevlevel and toclevel > 1:
 					# Decrease TOC level, find level to jump to
 
@@ -1878,11 +1879,11 @@ class Parser(BaseParser):
 								toclevel = i + 1
 								break
 					if toclevel < wgMaxTocLevel:
-						toc.append(u"</li>\n")
-						toc.append(u"</ul>\n</li>\n" * max(prevtoclevel - toclevel, 0))
+						toc.append("</li>\n")
+						toc.append("</ul>\n</li>\n" * max(prevtoclevel - toclevel, 0))
 				else:
 					if toclevel < wgMaxTocLevel:
-						toc.append(u"</li>\n")
+						toc.append("</li>\n")
 
 				levelCount[toclevel] = level
 
@@ -1910,7 +1911,7 @@ class Parser(BaseParser):
 	#							$canonized_headline );
 
 			# strip out HTML
-			canonized_headline = _tagPat.sub(u'', canonized_headline)
+			canonized_headline = _tagPat.sub('', canonized_headline)
 			tocline = canonized_headline.strip()
 			# Save headline for section edit hint before it's escaped
 			headline_hint = tocline
@@ -1929,23 +1930,23 @@ class Parser(BaseParser):
 			# Don't number the heading if it is the only one (looks silly)
 			if doNumberHeadings and numMatches > 1:
 				# the two are different if the line contains a link
-				headline = numbering + u' ' + headline
+				headline = numbering + ' ' + headline
 
 			# Create the anchor for linking from the TOC to the section
 			anchor = canonized_headline;
 			if refcount[headlineCount] > 1:
-				anchor += u'_' + six.text_type(refcount[headlineCount])
+				anchor += '_' + six.text_type(refcount[headlineCount])
 
 			if enoughToc:
-				toc.append(u'\n<li class="toclevel-')
+				toc.append('\n<li class="toclevel-')
 				toc.append(to_unicode(toclevel))
-				toc.append(u'"><a href="#w_')
+				toc.append('"><a href="#w_')
 				toc.append(anchor)
-				toc.append(u'"><span class="tocnumber">')
+				toc.append('"><span class="tocnumber">')
 				toc.append(numbering)
-				toc.append(u'</span> <span class="toctext">')
+				toc.append('</span> <span class="toctext">')
 				toc.append(tocline)
-				toc.append(u'</span></a>')
+				toc.append('</span></a>')
 
 	#		if showEditLink and (not istemplate or templatetitle != u""):
 	#			if not head[headlineCount]:
@@ -1960,16 +1961,16 @@ class Parser(BaseParser):
 			if headlineCount not in head:
 				head[headlineCount] = []
 			h = head[headlineCount]
-			h.append(u'<h')
+			h.append('<h')
 			h.append(to_unicode(level))
-			h.append(u' id="w_')
+			h.append(' id="w_')
 			h.append(anchor)
 			h.append('">')
 			h.append(matches[headlineCount][1].strip())
 			h.append(headline.strip())
-			h.append(u'</h')
+			h.append('</h')
 			h.append(to_unicode(level))
-			h.append(u'>')
+			h.append('>')
 
 			headlineCount += 1
 
@@ -1978,12 +1979,12 @@ class Parser(BaseParser):
 
 		if enoughToc:
 			if toclevel < wgMaxTocLevel:
-				toc.append(u"</li>\n")
-				toc.append(u"</ul>\n</li>\n" * max(0, toclevel - 1))
+				toc.append("</li>\n")
+				toc.append("</ul>\n</li>\n" * max(0, toclevel - 1))
 			#TODO: use gettext
 			#toc.insert(0, u'<div id="toc"><h2>' + _('Table of Contents') + '</h2>')
-			toc.insert(0, u'<div id="toc"><h2>Table of Contents</h2>')
-			toc.append(u'</ul>\n</div>')
+			toc.insert(0, '<div id="toc"><h2>Table of Contents</h2>')
+			toc.append('</ul>\n</div>')
 
 		# split up and insert constructed headlines
 
@@ -1991,7 +1992,7 @@ class Parser(BaseParser):
 
 		i = 0
 		len_blocks = len(blocks)
-		forceTocPosition = text.find(u"<!--MWTOC-->")
+		forceTocPosition = text.find("<!--MWTOC-->")
 		full = []
 		while i < len_blocks:
 			j = i/4
@@ -2003,9 +2004,9 @@ class Parser(BaseParser):
 				full += head[j]
 				head[j] = None
 			i += 4
-		full = u''.join(full)
+		full = ''.join(full)
 		if forceTocPosition != -1:
-			return full.replace(u"<!--MWTOC-->", u''.join(toc), 1)
+			return full.replace("<!--MWTOC-->", ''.join(toc), 1)
 		else:
 			return full
 
@@ -2091,12 +2092,12 @@ mTagHooks = {}
 from cgi import escape
 
 def hook_quote(env, body, attributes={}):
-	text = [u'<div class="blockquote">']
+	text = ['<div class="blockquote">']
 	if 'cite' in attributes:
-		text.append(u"<strong class=\"cite\">%s wrote:</strong>\n" % escape(attributes['cite']))
+		text.append("<strong class=\"cite\">%s wrote:</strong>\n" % escape(attributes['cite']))
 	text.append(body.strip())
-	text.append(u'</div>')
-	return u'\n'.join(text)
+	text.append('</div>')
+	return '\n'.join(text)
 registerTagHook('quote', hook_quote)
 
 def safe_name(name=None, remove_slashes=True):

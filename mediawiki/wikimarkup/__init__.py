@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from collections import OrderedDict
 import re, random, locale
 from base64 import b64encode, b64decode
+import six
 
 # a few patterns we use later
 
@@ -430,7 +431,7 @@ def registerTagHook(tag, function):
 
 class BaseParser(object):
 	def __init__(self):
-		self.uniq_prefix = u"\x07UNIQ" + unicode(random.randint(1, 1000000000))
+		self.uniq_prefix = u"\x07UNIQ" + six.text_type(random.randint(1, 1000000000))
 		self.strip_state = {}
 		self.arg_stack = []
 		self.env = env
@@ -1933,7 +1934,7 @@ class Parser(BaseParser):
 			# Create the anchor for linking from the TOC to the section
 			anchor = canonized_headline;
 			if refcount[headlineCount] > 1:
-				anchor += u'_' + unicode(refcount[headlineCount])
+				anchor += u'_' + six.text_type(refcount[headlineCount])
 
 			if enoughToc:
 				toc.append(u'\n<li class="toclevel-')
@@ -2061,18 +2062,18 @@ def to_unicode(text, charset=None):
 			# two possibilities for storing unicode strings in exception data:
 			try:
 				# custom __str__ method on the exception (e.g. PermissionError)
-				return unicode(text)
+				return six.text_type(text)
 			except UnicodeError:
 				# unicode arguments given to the exception (e.g. parse_date)
 				return ' '.join([to_unicode(arg) for arg in text.args])
-		return unicode(text)
+		return six.text_type(text)
 	if charset:
-		return unicode(text, charset, 'replace')
+		return six.text_type(text, charset, 'replace')
 	else:
 		try:
-			return unicode(text, 'utf-8')
+			return six.text_type(text, 'utf-8')
 		except UnicodeError:
-			return unicode(text, locale.getpreferredencoding(), 'replace')
+			return six.text_type(text, locale.getpreferredencoding(), 'replace')
 
 # tag hooks
 mTagHooks = {}

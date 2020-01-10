@@ -29,6 +29,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=[
+        'six',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

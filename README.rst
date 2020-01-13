@@ -20,7 +20,7 @@ In order to use this tool to render wikitext into HTML in a Python program, you 
         source += line
 
  wiki_content = wiki2html(source, True)
- print wiki_content
+ print(wiki_content)
 
 
 Doc about Syntax

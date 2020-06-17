@@ -1,6 +1,6 @@
-This is a fork of https://github.com/zikzakmedia/python-mediawiki and https://pypi.org/project/mediawiki/
+This is a fork of https://github.com/zikzakmedia/python-mediawiki aka https://pypi.org/project/mediawiki/
 
-It has updates to run with Python 3.  No further maintenance or feature develop is planned at this point.
+It has updates to run with Python 3.  No further maintenance or feature development is planned at this point.
 
 This updated version is published at https://pypi.org/project/mediawiki2html/ (:code:`pip install mediawiki2html`) but still
 provides the ":code:`mediawiki`" module that you import.

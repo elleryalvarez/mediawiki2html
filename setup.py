@@ -18,7 +18,7 @@ import mediawiki
 setup(
     name = 'mediawiki',
     version=mediawiki.__version__,
-    url='http://github.com/zikzakmedia/python-mediawiki',
+    url='https://github.com/brondsem/mediawiki2html',
     license='GPLv3+',
     author='Raimon Esteve',
     author_email='zikzak@zikzakmedia.com',

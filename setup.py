@@ -16,7 +16,7 @@ from setuptools import setup
 import mediawiki
 
 setup(
-    name = 'mediawiki',
+    name='mediawiki2html',
     version=mediawiki.__version__,
     url='https://github.com/brondsem/mediawiki2html',
     license='GPLv3+',

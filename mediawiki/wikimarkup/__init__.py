@@ -25,6 +25,10 @@ from base64 import b64encode, b64decode
 import six
 from six.moves import range
 from six.moves import zip
+try:
+	from cgi import escape
+except ImportError:
+	from html import escape
 
 # a few patterns we use later
 
@@ -2092,12 +2096,11 @@ mTagHooks = {}
 
 # quote example:
 # <quote cite="person">quote</quote>
-from cgi import escape
 
 def hook_quote(env, body, attributes={}):
 	text = ['<div class="blockquote">']
 	if 'cite' in attributes:
-		text.append("<strong class=\"cite\">%s wrote:</strong>\n" % escape(attributes['cite']))
+		text.append("<strong class=\"cite\">%s wrote:</strong>\n" % escape(attributes['cite'], quote=False))
 	text.append(body.strip())
 	text.append('</div>')
 	return '\n'.join(text)

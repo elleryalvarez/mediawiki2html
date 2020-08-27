@@ -13,11 +13,13 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
 from setuptools import setup
-import mediawiki
+
+__version__ = 'undefined'
+exec(open('mediawiki/version.py').read())
 
 setup(
     name='mediawiki2html',
-    version=mediawiki.__version__,
+    version=__version__,
     url='https://github.com/brondsem/mediawiki2html',
     license='GPLv3+',
     author='Raimon Esteve',

@@ -1,3 +1,5 @@
 .tox
+.idea
 /build/
 /dist/
+/mediawiki2html.egg-info/
